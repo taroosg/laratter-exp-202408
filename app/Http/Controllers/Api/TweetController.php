@@ -5,15 +5,24 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Tweet;
+use App\Services\TweetService;
 
 class TweetController extends Controller
 {
+
+  protected $tweetService;
+
+  public function __construct(TweetService $tweetService)
+  {
+    $this->tweetService = $tweetService;
+  }
+
   /**
    * Display a listing of the resource.
    */
   public function index()
   {
-    $tweets = Tweet::with('user')->latest()->get();
+    $tweets = $this->tweetService->allTweets();
     return response()->json($tweets);
   }
 
@@ -25,7 +34,7 @@ class TweetController extends Controller
     $request->validate([
       'tweet' => 'required|max:255',
     ]);
-    $tweet = $request->user()->tweets()->create($request->only('tweet'));
+    $tweet = $this->tweetService->createTweet($request);
     return response()->json($tweet, 201);
   }
 
@@ -45,7 +54,7 @@ class TweetController extends Controller
     $request->validate([
       'tweet' => 'required|string|max:255',
     ]);
-    $tweet->update($request->all());
+    $this->tweetService->updateTweet($request, $tweet);
 
     return response()->json($tweet);
   }
@@ -55,7 +64,7 @@ class TweetController extends Controller
    */
   public function destroy(Tweet $tweet)
   {
-    $tweet->delete();
+    $this->tweetService->deleteTweet($tweet);
     return response()->json(['message' => 'Tweet deleted successfully']);
   }
 }
