@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateTweetRequest;
 use Illuminate\Http\Request;
 use App\Models\Tweet;
 use App\Services\TweetService;
+use Illuminate\Support\Facades\Gate;
 
 class TweetController extends Controller
 {
@@ -24,6 +25,7 @@ class TweetController extends Controller
    */
   public function index()
   {
+    Gate::authorize('viewAny', Tweet::class);
     $tweets = $this->tweetService->allTweets();
     return response()->json($tweets);
   }
@@ -33,9 +35,7 @@ class TweetController extends Controller
    */
   public function store(StoreTweetRequest $request)
   {
-    $request->validate([
-      'tweet' => 'required|max:255',
-    ]);
+    Gate::authorize('create', Tweet::class);
     $tweet = $this->tweetService->createTweet($request);
     return response()->json($tweet, 201);
   }
@@ -45,6 +45,7 @@ class TweetController extends Controller
    */
   public function show(Tweet $tweet)
   {
+    Gate::authorize('view', $tweet);
     return response()->json($tweet);
   }
 
@@ -53,8 +54,8 @@ class TweetController extends Controller
    */
   public function update(UpdateTweetRequest $request, Tweet $tweet)
   {
+    Gate::authorize('update', $tweet);
     $this->tweetService->updateTweet($request, $tweet);
-
     return response()->json($tweet);
   }
 
@@ -63,6 +64,7 @@ class TweetController extends Controller
    */
   public function destroy(Tweet $tweet)
   {
+    Gate::authorize('delete', $tweet);
     $this->tweetService->deleteTweet($tweet);
     return response()->json(['message' => 'Tweet deleted successfully']);
   }
